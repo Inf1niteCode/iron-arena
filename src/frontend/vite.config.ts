@@ -23,11 +23,11 @@ export default defineConfig({
     ],
     proxy: {
       "/api": {
-        target: "https://superseriously-vixenly-leisa.ngrok-free.dev",
+        target: "https://iron-arena-production.up.railway.app",
         changeOrigin: true,
       },
       "/ws": {
-        target: "wss://superseriously-vixenly-leisa.ngrok-free.dev",
+        target: "wss://iron-arena-production.up.railway.app",
         ws: true,
         changeOrigin: true,
       },
