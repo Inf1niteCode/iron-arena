@@ -1,0 +1,81 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: iron_arena_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: iron_arena
+      POSTGRES_USER: iron_arena
+      POSTGRES_PASSWORD: iron_arena_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iron_arena -d iron_arena"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: iron_arena_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: iron_arena_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://iron_arena:iron_arena_pass@postgres:5432/iron_arena
+      REDIS_URL: redis://redis:6379
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      JWT_SECRET: ${JWT_SECRET:-iron-arena-dev-secret}
+      HOST: ${HOST:-localhost:8000}
+      WS_SCHEME: ${WS_SCHEME:-ws}
+      PYTHONPATH: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./reports:/app/reports
+
+  frontend:
+    image: node:20-alpine
+    container_name: iron_arena_frontend
+    working_dir: /app
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api/v1
+      VITE_WS_BASE_URL: ws://localhost:8000/ws
+    volumes:
+      - ./src/frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npx vite --host 0.0.0.0 --config vite.config.ts"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
