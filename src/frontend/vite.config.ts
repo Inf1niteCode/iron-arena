@@ -23,11 +23,11 @@ export default defineConfig({
     ],
     proxy: {
       "/api": {
-        target: "https://iron-arena-production.up.railway.app",
+        target: "https://iron-arena.onrender.com",
         changeOrigin: true,
       },
       "/ws": {
-        target: "wss://iron-arena-production.up.railway.app",
+        target: "wss://iron-arena.onrender.com",
         ws: true,
         changeOrigin: true,
       },
