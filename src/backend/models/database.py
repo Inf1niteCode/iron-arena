@@ -10,6 +10,8 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql+asyncpg://iron_arena:iron_arena_pass@localhost:5432/iron_arena"
 )
+# Fix prefix for asyncpg
+DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
 
 
 class Base(DeclarativeBase):
